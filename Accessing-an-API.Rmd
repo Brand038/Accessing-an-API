@@ -51,6 +51,33 @@ We now have data from the Dutch government on social benefits, a dataset that ge
 As we saw in this example, the challenge is often not so much getting something from the web service, but often we have substantial work to shape it into a useful object in R (usually: a dataframe).
 
 ## 5.3.1 Oefening
+*Dutch demography data since 1898*
 
 Haal data op van deze api: `https://opendata.cbs.nl/ODataApi/odata/37556/TypedDataSet`
 
+```{r oefening1}
+# The first step is to reach out to the server, and get a response.
+getoef <- GET("https://opendata.cbs.nl/ODataApi/odata/37556/TypedDataSet")
+
+# We can read the actual data with the `content` function:
+datoef <- content(getoef)
+
+# In this case, dat has two components - the interesting one is 'value'
+demography_list <- datoef$value
+```
+
+Unfortunately the result is a nested list, with NULL elements in some. To make this into a dataframe, we want to flatten each list, each of these will become a row in our dataframe, and bind all the rows together. This is such a common problem that I will show a robust solution:
+
+```{r oefening2, warning=FALSE, message=FALSE, error=FALSE}
+library(dplyr) # bind_rows
+library(purrr) # flatten_dfr
+
+demography_data <- lapply(demography_list, flatten_dfr) %>%
+  bind_rows
+```
+
+```{r oefening3}
+
+knitr::kable(demography_data[1:5,1:8], caption = 'Dutch demography data since 1898')
+
+```
